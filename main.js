@@ -2,7 +2,7 @@
 // @name         Dynamic-HTML5-Video-Control
 // @namespace    Violentmonkey Scripts
 // @description  Video control for HTML5 videos on all websites.
-// @version      1.6
+// @version      1.6.1
 // @author       You
 // @match        *://*/*
 // @grant        none
@@ -10,7 +10,7 @@
 
 (function () {
     let videoSpeed, videoSaturation, oldVideoSaturation, speedDisplay, videoSaturationDisplay, speedDisplayTimeout,
-    videoSaturationDisplayTimeout;
+        videoSaturationDisplayTimeout;
     let lastVideo = null;
     const MIN_RATE = 0, MAX_RATE = 5, RATE_STEP = 0.05, MIN_SATURATION = 0, MAX_SATURATION = 2, SATURATION_STEP = 0.1;
 
@@ -89,20 +89,20 @@
             case "[":
                 newRate = Math.max(MIN_RATE, video.playbackRate - RATE_STEP);
                 break;
-                case "]":
-                    newRate = Math.min(MAX_RATE, video.playbackRate + RATE_STEP);
-                    break;
-                    case ";":
-                        videoSaturation = Math.max(MIN_SATURATION, videoSaturation - SATURATION_STEP);
-                        break;
-                        case "'":
-                            videoSaturation = Math.min(MAX_SATURATION, videoSaturation + SATURATION_STEP);
-                            break;
-                            // Reset all the video settings to default
-            case "+":
+            case "]":
+                newRate = Math.min(MAX_RATE, video.playbackRate + RATE_STEP);
+                break;
+            case "{":
+                videoSaturation = Math.max(MIN_SATURATION, videoSaturation - SATURATION_STEP);
+                break;
+            case "}":
+                videoSaturation = Math.min(MAX_SATURATION, videoSaturation + SATURATION_STEP);
+                break;
+            // Reset all the video settings to default
+            case "`":
                 resetVideoSettings(video);
                 break;
-                // If any other key is pressed, do nothing/exit the function
+            // If any other key is pressed, do nothing/exit the function
             default:
                 return;
         }
@@ -159,5 +159,5 @@
     // Modify event listener
     document.addEventListener("play", (e) => {
         captureActiveVideoElement(e.target);
-        }, true);
+    }, true);
 })();

@@ -12,7 +12,8 @@
     let videoSpeed, videoSaturation, oldVideoSaturation, speedDisplay, videoSaturationDisplay, speedDisplayTimeout,
         videoSaturationDisplayTimeout;
     let lastVideo = null;
-    const MIN_RATE = 0, MAX_RATE = 5, RATE_STEP = 0.05, MIN_SATURATION = 0, MAX_SATURATION = 2, SATURATION_STEP = 0.1;
+    const MIN_RATE = 0, MAX_RATE = 5, RATE_STEP = 0.05,
+        MIN_SATURATION = 0, MAX_SATURATION = 3, SATURATION_STEP = 0.1;
 
     document.addEventListener("keydown", function (event) {
         const videos = Array.from(document.getElementsByTagName("video"));
@@ -29,19 +30,16 @@
      * @param {String} type
      */
     function createDisplay(video, type) {
-        const display = document.createElement('div');
-        const settings = {
-            position: 'absolute',
-            top: type === 'speed' ? '10px' : '40px',
-            left: '10px',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            color: type === 'speed' ? 'aquamarine' : 'lightcoral',
-            padding: '5px',
-            borderRadius: '5px',
-            zIndex: '2147483647',
-            opacity: '0',
-        };
-        Object.assign(display.style, settings);
+        const display = document.createElement('span');
+        display.style.position = 'fixed';
+        display.style.top = type === 'speed' ? '10px' : '40px';
+        display.style.left = '10px';
+        display.style.backgroundColor = 'transparent';
+        display.style.color = type === 'speed' ? 'aquamarine' : 'lightcoral';
+        display.style.zIndex = '9999';
+        display.style.opacity = '0';
+        display.style.transition = 'opacity 1s';
+
         video.parentNode.appendChild(display);
 
         setTimeout(() => {
@@ -76,6 +74,20 @@
         videoSaturation = 1;
     }
 
+    let dynamicAcceleration = {
+        desiredSpeed: 3,
+        startingSpeed: 1.5,
+        percentage: 0.6,
+        startTime: 0,
+        duration: 0,
+    };
+
+    document.addEventListener("play", (e) => {
+        const video = e.target;
+        dynamicAcceleration.startTime = video.currentTime;
+        dynamicAcceleration.duration = video.duration;
+        captureActiveVideoElement(video);
+    }, true);
 
     /**
      * Handle key press
@@ -103,9 +115,15 @@
                 resetVideoSettings(video);
                 break;
             // If any other key is pressed, do nothing/exit the function
+            case "d":
+                dynamicAcceleration.enable = !dynamicAcceleration.enable;
+                if (dynamicAcceleration.enable) {
+                    dynamicAcceleration.startTime = video.currentTime;
+                }
+                break;
             default:
                 return;
-        }
+        } 
 
         if (newRate !== video.playbackRate) {
             video.playbackRate = newRate;
@@ -154,6 +172,12 @@
 
         // Same for saturation display
         if (!videoSaturationDisplay) createDisplay(video, 'saturation');
+
+        if (dynamicAcceleration.enable) {
+            const elapsedPercentage = (video.currentTime - dynamicAcceleration.startTime) / dynamicAcceleration.duration;
+            const speedIncrement = (dynamicAcceleration.desiredSpeed - dynamicAcceleration.startingSpeed) * elapsedPercentage / dynamicAcceleration.percentage;
+            video.playbackRate = dynamicAcceleration.startingSpeed + speedIncrement;
+        }
     }
 
     // Modify event listener

@@ -1,21 +1,20 @@
-# Dynamic-HTML5-Video-Control
+# HTML5 Video Manager
 
-This is a userscript for controlling the playback of HTML5 videos on any website.
+An adaptable userscript for personalized HTML5 video playback across websites.
 
-## Features
+## Key Features
 
-- Decrease video speed (press `[`)
-- Increase video speed (press `]`)
-- Changing the video saturation (press `SHIFT + [ or ]`)
+- Control video speed (`[` to slow down, `]` to speed up)
+- Tweak video saturation (`SHIFT + [` or `]`)
 
-## Installation
+## Get Started
 
-This script is designed to be used with a userscript manager like Tampermonkey or Violentmonkey.
+To use this script, follow these steps:
 
-1. Install a userscript manager for your browser.
-2. Create a new script in the userscript manager.
-3. Copy and paste the provided JavaScript code into the new script.
-4. Save the script.
+1. Download a userscript manager (Tampermonkey or Violentmonkey recommended).
+2. Open the manager and create a new script.
+3. Transfer the provided JavaScript code into the newly created script.
+4. Secure your changes by saving the script.
 
-## Pull Requests
-If you have any suggestions or improvements, feel free to submit a pull request.
+## Contribute
+Your input is valuable. If you have any suggestions or refinements, please submit a pull request.

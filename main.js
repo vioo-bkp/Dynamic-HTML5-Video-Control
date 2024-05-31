@@ -2,13 +2,13 @@
 // @name         Dynamic-HTML5-Video-Control
 // @namespace    Violentmonkey Scripts
 // @description  Video control for HTML5 videos on all websites.
-// @version      1.6.1
+// @version      1.7.0
 // @author       You
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     let videoSpeed, videoSaturation, oldVideoSaturation, speedDisplay, videoSaturationDisplay, speedDisplayTimeout,
         videoSaturationDisplayTimeout;
     let lastVideo = null;
@@ -25,10 +25,10 @@
     document.addEventListener("keydown", handlePressedKey);
 
     /**
-    * Create display for video
-    * @param {Object} video
-    * @param {String} type
-    */
+     * Create display for video
+     * @param {Object} video
+     * @param {String} type
+     */
     function createDisplay(video, type) {
         const display = document.createElement('span');
         display.style.position = 'fixed';
@@ -57,9 +57,9 @@
     }
 
     /**
-    * Reset all video settings to default
-    * @param {Object} video
-    */
+     * Reset all video settings to default
+     * @param {Object} video
+     */
     function resetVideoSettings(video) {
         if (!video) return;
 
@@ -76,8 +76,8 @@
     }
 
     let dynamicAcceleration = {
-        desiredSpeed: 3,
         startingSpeed: 1.5,
+        finalSpeed: 3,
         percentage: 0.6,
         startTime: 0,
         duration: 0,
@@ -85,8 +85,8 @@
     };
 
     /**
-    * Handle key press
-    */
+     * Handle key press
+     */
     function handlePressedKey(event) {
         const target = event.target;
         // Exit function if the event target is an input, textarea, or contentEditable element
@@ -156,8 +156,8 @@
     }
 
     /**
-    * Capture active video element
-    */
+     * Capture active video element
+     */
     function captureActiveVideoElement(e) {
         const video = e.target;
         // Update speed and saturation only if lastVideo is null or a different video
@@ -172,11 +172,9 @@
         if (!videoSaturationDisplay) createDisplay(video, 'saturation');
 
         if (dynamicAcceleration.enable) {
-            // Calculate percentage of video played
-            const elapsedPercentage = (video.currentTime - dynamicAcceleration.startTime) / dynamicAcceleration.duration;
-
             // Calculate playback rate based on elapsed percentage
-            const speedIncrement = (dynamicAcceleration.desiredSpeed - dynamicAcceleration.startingSpeed) * elapsedPercentage / dynamicAcceleration.percentage;
+            const speedIncrement = dynamicAcceleration.startingSpeed + (dynamicAcceleration.finalSpeed - dynamicAcceleration.startingSpeed)
+                * (video.currentTime / video.duration) / dynamicAcceleration.percentage;
             video.playbackRate = dynamicAcceleration.startingSpeed + speedIncrement;
         }
     }

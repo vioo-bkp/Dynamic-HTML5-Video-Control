@@ -8,27 +8,27 @@
 // @grant        none
 // ==/UserScript==
 
-(function () {
+(function() {
     let videoSpeed, videoSaturation, oldVideoSaturation, speedDisplay, videoSaturationDisplay, speedDisplayTimeout,
         videoSaturationDisplayTimeout;
     let lastVideo = null;
-    const MIN_RATE = 0, MAX_RATE = 5, RATE_STEP = 0.05,
-        MIN_SATURATION = 0, MAX_SATURATION = 3, SATURATION_STEP = 0.1;
+    const MIN_RATE = 0,
+        MAX_RATE = 5,
+        RATE_STEP = 0.05,
+        MIN_SATURATION = 0,
+        MAX_SATURATION = 3,
+        SATURATION_STEP = 0.1;
 
-    document.addEventListener("keydown", function (event) {
-        const videos = Array.from(document.getElementsByTagName("video"));
-        const video = videos.find(v => !v.paused && !v.ended && v.readyState > 2);
-
-        if (video) {
-            handlePressedKey(event, video);
-        }
-    });
+    // Use captureEvent for play event to capture active video
+    document.addEventListener("play", captureActiveVideoElement, true);
+    // Use keydown for handling keypress events
+    document.addEventListener("keydown", handlePressedKey);
 
     /**
-     * Create display for video
-     * @param {Object} video
-     * @param {String} type
-     */
+    * Create display for video
+    * @param {Object} video
+    * @param {String} type
+    */
     function createDisplay(video, type) {
         const display = document.createElement('span');
         display.style.position = 'fixed';
@@ -42,8 +42,9 @@
 
         video.parentNode.appendChild(display);
 
+        // Set timeout to hide display if it's not already hidden
         setTimeout(() => {
-            if (display.style.opacity !== '1') {
+            if (display.style.opacity !== '0') {
                 display.style.opacity = '0';
             }
         }, 1000);
@@ -55,18 +56,18 @@
         }
     }
 
-
     /**
-     * Reset all video settings to default
-     * @param {Object} video
-     */
+    * Reset all video settings to default
+    * @param {Object} video
+    */
     function resetVideoSettings(video) {
         if (!video) return;
-        // Code omitted for brevity
+
         lastVideo = null; // Reset reference to last video
         video.playbackRate = 1;
         video.style.filter = 'none';
 
+        // Remove displays
         speedDisplay.remove();
         videoSaturationDisplay.remove();
 
@@ -80,21 +81,21 @@
         percentage: 0.6,
         startTime: 0,
         duration: 0,
+        enable: false,
     };
 
-    document.addEventListener("play", (e) => {
-        const video = e.target;
-        dynamicAcceleration.startTime = video.currentTime;
-        dynamicAcceleration.duration = video.duration;
-        captureActiveVideoElement(video);
-    }, true);
-
     /**
-     * Handle key press
-     */
-    function handlePressedKey(event, video) {
+    * Handle key press
+    */
+    function handlePressedKey(event) {
         const target = event.target;
+        // Exit function if the event target is an input, textarea, or contentEditable element
         if (target.localName === "input" || target.localName === "textarea" || target.isContentEditable) return;
+
+        const videos = Array.from(document.getElementsByTagName("video"));
+        // Find the video that's playing and ready
+        const video = videos.find(v => !v.paused && !v.ended && v.readyState > 2);
+        if (!video) return;
 
         let newRate = video.playbackRate;
         switch (event.key) {
@@ -114,7 +115,7 @@
             case "`":
                 resetVideoSettings(video);
                 break;
-            // If any other key is pressed, do nothing/exit the function
+            // Toggle dynamic acceleration
             case "d":
                 dynamicAcceleration.enable = !dynamicAcceleration.enable;
                 if (dynamicAcceleration.enable) {
@@ -123,19 +124,17 @@
                 break;
             default:
                 return;
-        } 
+        }
 
         if (newRate !== video.playbackRate) {
             video.playbackRate = newRate;
             videoSpeed = newRate;
             speedDisplay.textContent = `Speed: ${videoSpeed.toFixed(2)}`;
             speedDisplay.style.opacity = '1';
-            // Clear previous timeout
             clearTimeout(speedDisplayTimeout);
-            // Set up new timeout
             speedDisplayTimeout = setTimeout(() => {
                 if (speedDisplay.style.opacity !== '0') {
-                    speedDisplay.style.opacity = '0'
+                    speedDisplay.style.opacity = '0';
                 }
             }, 1000);
         }
@@ -145,10 +144,9 @@
             videoSaturationDisplay.textContent = `Saturation: ${videoSaturation.toFixed(2)}`;
             videoSaturationDisplay.style.opacity = '1';
             clearTimeout(videoSaturationDisplayTimeout);
-            // Set up new timeout
             videoSaturationDisplayTimeout = setTimeout(() => {
                 if (videoSaturationDisplay.style.opacity !== '0') {
-                    videoSaturationDisplay.style.opacity = '0'
+                    videoSaturationDisplay.style.opacity = '0';
                 }
             }, 1000);
             oldVideoSaturation = videoSaturation;
@@ -158,30 +156,28 @@
     }
 
     /**
-     * Capture active video element
-     */
-    function captureActiveVideoElement(video) {
+    * Capture active video element
+    */
+    function captureActiveVideoElement(e) {
+        const video = e.target;
         // Update speed and saturation only if lastVideo is null or a different video
         if (lastVideo !== video) {
             videoSpeed = video.playbackRate;
             videoSaturation = 1;
             lastVideo = video; // Update lastVideo
         }
-        // Only create speedDisplay if it doesn't exist
-        if (!speedDisplay) createDisplay(video, 'speed');
 
-        // Same for saturation display
+        // Only create displays if they don't exist
+        if (!speedDisplay) createDisplay(video, 'speed');
         if (!videoSaturationDisplay) createDisplay(video, 'saturation');
 
         if (dynamicAcceleration.enable) {
+            // Calculate percentage of video played
             const elapsedPercentage = (video.currentTime - dynamicAcceleration.startTime) / dynamicAcceleration.duration;
+
+            // Calculate playback rate based on elapsed percentage
             const speedIncrement = (dynamicAcceleration.desiredSpeed - dynamicAcceleration.startingSpeed) * elapsedPercentage / dynamicAcceleration.percentage;
             video.playbackRate = dynamicAcceleration.startingSpeed + speedIncrement;
         }
     }
-
-    // Modify event listener
-    document.addEventListener("play", (e) => {
-        captureActiveVideoElement(e.target);
-    }, true);
 })();

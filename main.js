@@ -9,9 +9,7 @@
 // ==/UserScript==
 
 (function () {
-    let videoSpeed, videoSaturation, oldVideoSaturation, speedDisplay, videoSaturationDisplay, speedDisplayTimeout,
-        videoSaturationDisplayTimeout;
-    let lastVideo = null;
+    'use strict';
     const MIN_RATE = 0,
         MAX_RATE = 5,
         RATE_STEP = 0.05,
@@ -19,73 +17,51 @@
         MAX_SATURATION = 3,
         SATURATION_STEP = 0.1;
 
-    // Use captureEvent for play event to capture active video
-    document.addEventListener("play", captureActiveVideoElement, true);
-    // Use keydown for handling keypress events
-    document.addEventListener("keydown", handlePressedKey);
+    let videoSpeed = 1;
+    let videoSaturation = 1;
+    let dynamicAcceleration = {
+        enable: false,
+        startingSpeed: 1,
+        finalSpeed: 3,
+        percentage: 0.6,
+        startTime: 0,
+    };
 
-    /**
-     * Create display for video
-     * @param {Object} video
-     * @param {String} type
-     */
-    function createDisplay(video, type) {
-        const display = document.createElement('span');
-        display.style.position = 'fixed';
-        display.style.top = type === 'speed' ? '10px' : '40px';
-        display.style.left = '10px';
-        display.style.backgroundColor = 'transparent';
-        display.style.color = type === 'speed' ? 'aquamarine' : 'lightcoral';
-        display.style.zIndex = '9999';
-        display.style.opacity = '0';
-        display.style.transition = 'opacity 1s';
+    let displayTimeout; // Timeout variable for fading out
 
-        video.parentNode.appendChild(display);
+    // Create a display container element
+    const displayContainer = document.createElement('div');
+    displayContainer.style.position = 'absolute';
+    displayContainer.style.top = '10px';
+    displayContainer.style.left = '10px';
+    displayContainer.style.zIndex = '9999';
+    displayContainer.style.pointerEvents = 'none';
+    displayContainer.style.transition = 'opacity 0.5s ease-in-out'; // Add transition for fading
+    document.body.appendChild(displayContainer);
 
-        // Set timeout to hide display if it's not already hidden
-        setTimeout(() => {
-            if (display.style.opacity !== '0') {
-                display.style.opacity = '0';
-            }
-        }, 1000);
+    function updateDisplay() {
+        displayContainer.innerHTML = `
+            <span style="color: aquamarine;">Speed: ${videoSpeed.toFixed(2)}</span><br>
+            <span style="color: lightcoral;">Saturation: ${videoSaturation.toFixed(2)}</span>
+        `;
 
-        if (type === 'speed') {
-            speedDisplay = display;
-        } else {
-            videoSaturationDisplay = display;
+        // Show the display
+        displayContainer.style.opacity = '1';
+
+        // Clear any existing timeout
+        clearTimeout(displayTimeout);
+
+        // Set a new timeout ONLY if one is not already running
+        if (!displayTimeout) {
+            displayTimeout = setTimeout(() => {
+                displayContainer.style.opacity = '0';
+                displayTimeout = null; // Reset displayTimeout when fade-out is complete
+            }, 3000);
         }
     }
 
     /**
-     * Reset all video settings to default
-     * @param {Object} video
-     */
-    function resetVideoSettings(video) {
-        if (!video) return;
-
-        lastVideo = null; // Reset reference to last video
-        video.playbackRate = 1;
-        video.style.filter = 'none';
-
-        // Remove displays
-        speedDisplay.remove();
-        videoSaturationDisplay.remove();
-
-        videoSpeed = 1;
-        videoSaturation = 1;
-    }
-
-    let dynamicAcceleration = {
-        startingSpeed: 1.5,
-        finalSpeed: 3,
-        percentage: 0.6,
-        startTime: 0,
-        duration: 0,
-        enable: false,
-    };
-
-    /**
-     * Handle key press
+     * Handle key press to control video playback.
      */
     function handlePressedKey(event) {
         const target = event.target;
@@ -111,14 +87,11 @@
             case "}":
                 videoSaturation = Math.min(MAX_SATURATION, videoSaturation + SATURATION_STEP);
                 break;
-            // Reset all the video settings to default
-            case "`":
-                resetVideoSettings(video);
-                break;
             // Toggle dynamic acceleration
-            case "d":
+            case "`":
                 dynamicAcceleration.enable = !dynamicAcceleration.enable;
                 if (dynamicAcceleration.enable) {
+                    dynamicAcceleration.startingSpeed = video.playbackRate;
                     dynamicAcceleration.startTime = video.currentTime;
                 }
                 break;
@@ -129,53 +102,48 @@
         if (newRate !== video.playbackRate) {
             video.playbackRate = newRate;
             videoSpeed = newRate;
-            speedDisplay.textContent = `Speed: ${videoSpeed.toFixed(2)}`;
-            speedDisplay.style.opacity = '1';
-            clearTimeout(speedDisplayTimeout);
-            speedDisplayTimeout = setTimeout(() => {
-                if (speedDisplay.style.opacity !== '0') {
-                    speedDisplay.style.opacity = '0';
-                }
-            }, 1000);
         }
 
-        if (videoSaturation !== oldVideoSaturation) {
-            video.style.filter = `saturate(${videoSaturation})`;
-            videoSaturationDisplay.textContent = `Saturation: ${videoSaturation.toFixed(2)}`;
-            videoSaturationDisplay.style.opacity = '1';
-            clearTimeout(videoSaturationDisplayTimeout);
-            videoSaturationDisplayTimeout = setTimeout(() => {
-                if (videoSaturationDisplay.style.opacity !== '0') {
-                    videoSaturationDisplay.style.opacity = '0';
-                }
-            }, 1000);
-            oldVideoSaturation = videoSaturation;
-        } else {
-            videoSaturationDisplay.style.opacity = '0';
-        }
+        video.style.filter = `saturate(${videoSaturation})`;
+        updateDisplay();
     }
 
     /**
-     * Capture active video element
+     * Update video playback rate if dynamic acceleration is enabled.
      */
-    function captureActiveVideoElement(e) {
-        const video = e.target;
-        // Update speed and saturation only if lastVideo is null or a different video
-        if (lastVideo !== video) {
-            videoSpeed = video.playbackRate;
-            videoSaturation = 1;
-            lastVideo = video; // Update lastVideo
-        }
-
-        // Only create displays if they don't exist
-        if (!speedDisplay) createDisplay(video, 'speed');
-        if (!videoSaturationDisplay) createDisplay(video, 'saturation');
-
+    function updateDynamicAcceleration(video) {
         if (dynamicAcceleration.enable) {
-            // Calculate playback rate based on elapsed percentage
-            const speedIncrement = dynamicAcceleration.startingSpeed + (dynamicAcceleration.finalSpeed - dynamicAcceleration.startingSpeed)
-                * (video.currentTime / video.duration) / dynamicAcceleration.percentage;
+            const elapsedPercentage = (video.currentTime - dynamicAcceleration.startTime) / video.duration;
+            const speedIncrement = (dynamicAcceleration.finalSpeed - dynamicAcceleration.startingSpeed) *
+                (elapsedPercentage / dynamicAcceleration.percentage);
+
             video.playbackRate = dynamicAcceleration.startingSpeed + speedIncrement;
+            videoSpeed = video.playbackRate;
+
+            // Update display and reset fade-out timer
+            updateDisplay();
         }
     }
+
+    // Event listeners
+    document.addEventListener("keydown", handlePressedKey);
+    document.addEventListener("play", (event) => {
+        if (event.target.tagName === 'VIDEO') {
+            const video = event.target;
+
+            // Update dynamicAcceleration.startingSpeed when a video starts or resumes
+            dynamicAcceleration.startingSpeed = video.playbackRate;
+            dynamicAcceleration.enable = false;
+
+            updateDisplay();
+
+            const animationFrame = () => {
+                if (!video.paused && !video.ended) {
+                    updateDynamicAcceleration(video);
+                    requestAnimationFrame(animationFrame);
+                }
+            };
+            requestAnimationFrame(animationFrame);
+        }
+    }, true);
 })();

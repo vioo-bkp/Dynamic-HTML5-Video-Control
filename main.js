@@ -2,7 +2,7 @@
 // @name         Dynamic-HTML5-Video-Control
 // @namespace    Violentmonkey Scripts
 // @description  Video control for HTML5 videos on all websites.
-// @version      1.7.1
+// @version      1.8.0
 // @author       vioo-bkp
 // @match        *://*/*
 // @grant        none

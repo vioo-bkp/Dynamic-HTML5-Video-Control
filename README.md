@@ -6,6 +6,7 @@ An adaptable userscript for personalized HTML5 video playback across websites.
 
 - Control video speed (`[` to slow down, `]` to speed up)
 - Tweak video saturation (`SHIFT + [` or `]`)
+- Smoothly increase the video speed gradually (`SHIFT + ;` or `:`)
 
 ## Get Started
 

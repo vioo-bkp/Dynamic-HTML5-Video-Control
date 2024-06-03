@@ -2,17 +2,17 @@
 // @name         Dynamic-HTML5-Video-Control
 // @namespace    Violentmonkey Scripts
 // @description  Video control for HTML5 videos on all websites.
-// @version      1.7.0
-// @author       You
+// @version      1.7.1
+// @author       vioo-bkp
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
-    const MIN_RATE = 0,
-        MAX_RATE = 5,
-        RATE_STEP = 0.05,
+    const MIN_SPEED_RATE = 0,
+        MAX_SPEED_RATE = 5,
+        SPEED_RATE_STEP = 0.05,
         MIN_SATURATION = 0,
         MAX_SATURATION = 3,
         SATURATION_STEP = 0.1;
@@ -76,10 +76,10 @@
         let newRate = video.playbackRate;
         switch (event.key) {
             case "[":
-                newRate = Math.max(MIN_RATE, video.playbackRate - RATE_STEP);
+                newRate = Math.max(MIN_SPEED_RATE, video.playbackRate - SPEED_RATE_STEP);
                 break;
             case "]":
-                newRate = Math.min(MAX_RATE, video.playbackRate + RATE_STEP);
+                newRate = Math.min(MAX_SPEED_RATE, video.playbackRate + SPEED_RATE_STEP);
                 break;
             case "{":
                 videoSaturation = Math.max(MIN_SATURATION, videoSaturation - SATURATION_STEP);
@@ -88,12 +88,17 @@
                 videoSaturation = Math.min(MAX_SATURATION, videoSaturation + SATURATION_STEP);
                 break;
             // Toggle dynamic acceleration
-            case "`":
+            case ":":
                 dynamicAcceleration.enable = !dynamicAcceleration.enable;
                 if (dynamicAcceleration.enable) {
                     dynamicAcceleration.startingSpeed = video.playbackRate;
                     dynamicAcceleration.startTime = video.currentTime;
                 }
+                break;
+            // Reset speed and saturation
+            case "`":
+                newRate = 1;
+                videoSaturation = 1;
                 break;
             default:
                 return;

@@ -2,7 +2,7 @@
 // @name         Dynamic-HTML5-Video-Control
 // @namespace    Violentmonkey Scripts
 // @description  Video control for HTML5 videos on all websites.
-// @version      1.8.0
+// @version      1.8.1
 // @author       vioo-bkp
 // @match        *://*/*
 // @grant        none
@@ -37,7 +37,8 @@
     displayContainer.style.zIndex = '9999';
     displayContainer.style.pointerEvents = 'none';
     displayContainer.style.transition = 'opacity 0.5s ease-in-out'; // Add transition for fading
-    document.body.appendChild(displayContainer);
+    // Add a class to style the container
+    displayContainer.classList.add('video-control-overlay');
 
     function updateDisplay() {
         displayContainer.innerHTML = `
@@ -52,12 +53,9 @@
         clearTimeout(displayTimeout);
 
         // Set a new timeout ONLY if one is not already running
-        if (!displayTimeout) {
-            displayTimeout = setTimeout(() => {
-                displayContainer.style.opacity = '0';
-                displayTimeout = null; // Reset displayTimeout when fade-out is complete
-            }, 3000);
-        }
+        displayTimeout = setTimeout(() => {
+            displayContainer.style.opacity = '0';
+        }, 3000);
     }
 
     /**
@@ -135,6 +133,19 @@
     document.addEventListener("play", (event) => {
         if (event.target.tagName === 'VIDEO') {
             const video = event.target;
+            const parent = video.parentElement;
+
+            // Append the display container inside the parent of the video
+            parent.appendChild(displayContainer);
+
+            // Set position relative to the video
+            displayContainer.style.position = 'absolute';
+            displayContainer.style.top = '10px';
+            displayContainer.style.left = '10px';
+            // Position relative to the video
+            displayContainer.style.top = 0;
+            displayContainer.style.left = 0;
+            displayContainer.style.margin = '10px';
 
             // Update dynamicAcceleration.startingSpeed when a video starts or resumes
             dynamicAcceleration.startingSpeed = video.playbackRate;

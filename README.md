@@ -9,8 +9,6 @@ An adaptable userscript for personalized HTML5 video playback across websites.
 - Smoothly increase the video speed gradually (`SHIFT + ;` or `:`)
 - Set all settings to default (by pressing `, left side of key "1")
 
-For proper assistance, could you please specify in what language you pursue this functionality or describe your task in more details?
-
 ## Get Started
 
 To use this script, follow these steps:

@@ -117,13 +117,16 @@
      */
     function updateDynamicAcceleration(video) {
         if (dynamicAcceleration.enable) {
-            const elapsedPercentage = (video.currentTime - dynamicAcceleration.startTime) / video.duration;
-            const speedIncrement = (dynamicAcceleration.finalSpeed - dynamicAcceleration.startingSpeed) *
-                (elapsedPercentage / dynamicAcceleration.percentage);
+            const elapsedTime = video.currentTime - dynamicAcceleration.startTime;
+            const accelerationDuration = video.duration * dynamicAcceleration.percentage;
 
-            video.playbackRate = dynamicAcceleration.startingSpeed + speedIncrement;
-            videoSpeed = video.playbackRate;
-
+            // Calculate speed only if within the acceleration duration
+            if (elapsedTime <= accelerationDuration) {
+                const speedIncrement = (dynamicAcceleration.finalSpeed - dynamicAcceleration.startingSpeed) * 
+                                       (elapsedTime / accelerationDuration);
+                video.playbackRate = Math.min(dynamicAcceleration.startingSpeed + speedIncrement, dynamicAcceleration.finalSpeed);
+                videoSpeed = video.playbackRate;
+            } 
             // Update display and reset fade-out timer
             updateDisplay();
         }

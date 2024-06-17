@@ -17,8 +17,7 @@
         MAX_SATURATION = 3,
         SATURATION_STEP = 0.1;
 
-    let videoSpeed = 1;
-    let videoSaturation = 1;
+    
     let dynamicAcceleration = {
         enable: false,
         startingSpeed: 1,
@@ -26,7 +25,9 @@
         percentage: 0.6,
         startTime: 0,
     };
-
+    
+    let videoSpeed = 1;
+    let videoSaturation = 1;
     let displayTimeout; // Timeout variable for fading out
 
     // Create a display container element

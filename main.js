@@ -65,6 +65,7 @@
     function handlePressedKey(event) {
         const target = event.target;
         // Exit function if the event target is an input, textarea, or contentEditable element
+        // Prevent the video control hotkeys from interfering with users who are actively typing in text input fields.
         if (target.localName === "input" || target.localName === "textarea" || target.isContentEditable) return;
 
         const videos = Array.from(document.getElementsByTagName("video"));

@@ -28,7 +28,8 @@
     
     let videoSpeed = 1;
     let videoSaturation = 1;
-    let displayTimeout; // Timeout variable for fading out
+    // Timeout variable for fading out
+    let displayTimeout;
 
     // Create a display container element
     const displayContainer = document.createElement('div');
@@ -37,7 +38,8 @@
     displayContainer.style.left = '10px';
     displayContainer.style.zIndex = '9999';
     displayContainer.style.pointerEvents = 'none';
-    displayContainer.style.transition = 'opacity 0.5s ease-in-out'; // Add transition for fading
+    // Add transition for fading
+    displayContainer.style.transition = 'opacity 0.5s ease-in-out';
     // Add a class to style the container
     displayContainer.classList.add('video-control-overlay');
 
